@@ -12,9 +12,8 @@ class ChatConsumer(WebsocketConsumer):
     def fetch_messages(self, data):#Берет последний 10 сообщений и пересылает по сути в тот же чат
         print('fetch function started')
         print(data)
-        print(data)
-        chat_id = data['chat_id']
-        messages = Message.last_10_messages(chat_id)
+        # chat_id = data['chat_id']
+        messages = Message.last_10_messages()
         content = {
             'command':'messages',
             'messages': self.messages_to_json(messages)
@@ -23,15 +22,14 @@ class ChatConsumer(WebsocketConsumer):
         print('fetch function end')
 
     def new_message(self, data):#Откуда идет дата, с JS?
-        print('creating new message')
-        print('new message data:',data)
-        author = data["from"]#Это он берет username
+        print(data)
+        print(data)
+        author = data["from"]#Это он берет User_id
         author_user = User.objects.filter(username=author)[0]#По user_id находит автора
-        chat_id = data['chat_id']
+        # chat_id = data['chat']
         message = Message.objects.create(
             author = author_user,
-            content = data['message',],
-            chat = chat_id
+            content = data['message'],
             # chat = chat_id#При созданий сообщения, на верху создался чат
             )
         content = {

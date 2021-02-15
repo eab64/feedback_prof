@@ -44,7 +44,6 @@ def main(request, user_id):
             'user_id': mark_safe(json.dumps(user_id))
         })
 
-
     except ChatUser.DoesNotExist:#Если такого Юзера нет, создаем новый чат и привязываем его к новому юзеру
         new_chat = Chats.objects.create(name='SmartPlaza Chat')
         chat_id = new_chat.id
@@ -55,9 +54,10 @@ def main(request, user_id):
             'chat_id': mark_safe(json.dumps(chat_id)),
             'user_id': mark_safe(json.dumps(user_id))
         })
+
+
 def sign_in(request):
     return render(request, 'chat/button.html')
-
 
 
 class ChatsView(viewsets.ModelViewSet):
@@ -74,7 +74,7 @@ class UserView(viewsets.ModelViewSet):
 
 # dict = {
 #            id: 123,
-#            users:{user:1, user:2},
+#            users:user:1,
 #            message:[userName: name, message: "text",
 #             createdAt: "2021-02-20 12:13:10"],
 #                     [userName: name, message: "text", createdAt: "2021-02-20 12:13:10"] },
