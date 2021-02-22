@@ -1,6 +1,7 @@
 # chat/views.py
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.db.models import Max
 from django.utils.safestring import mark_safe
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets
@@ -10,10 +11,11 @@ import json
 import datetime
 from .models import Chats, ChatUser, Message
 from .serializers import ChatsSerializer, UserSerializer
+from django.core.paginator import Paginator
+import requests
 
 
-
-Userr = get_user_model()
+# Userr = get_user_model()
 
 # def index(request):
 #     return render(request, 'chat/index.html', {})
@@ -39,7 +41,7 @@ def main(request, user_id):
         chatUser = ChatUser.objects.get(user_id=user_id)#Смотрим есть ли чат с таким user_id
         return render(request, 'chat/room.html', {
             'room_name_json': mark_safe(json.dumps('SmartPlaza Chat')),
-            'username': mark_safe(json.dumps(request.user.username)),
+            # 'username': mark_safe(json.dumps(request.user.username)),
             'chat_id': mark_safe(json.dumps(chatUser.chatik.id)),
             'user_id': mark_safe(json.dumps(user_id))
         })
@@ -50,14 +52,23 @@ def main(request, user_id):
         ChatUser.objects.create(chatik=new_chat, user_id=user_id)
         return render(request, 'chat/room.html', {
             'room_name_json': mark_safe(json.dumps(new_chat.name)),
-            'username': mark_safe(json.dumps(request.user.username)),
-            'chat_id': mark_safe(json.dumps(chat_id)),
+            # 'username': mark_safe(json.dumps(request.user.username)),
+            'chat_id': mark_safe(json.dumps(new_chat.id)),
             'user_id': mark_safe(json.dumps(user_id))
         })
 
 
 def sign_in(request):
     return render(request, 'chat/button.html')
+
+def last_messages(request):
+    list = []
+    queryset = Message.objects.order_by('-timestamp').filter(chat_id = 2)
+    chats = Chats.objects.all().values_list('id', flat=True)
+    for message in queryset:
+        list.append(message.content)
+
+    return render(request, 'chat/admin.html', {'messages': chats[0]})
 
 
 class ChatsView(viewsets.ModelViewSet):

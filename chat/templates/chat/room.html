@@ -15,24 +15,25 @@
     <script src="{% static 'reconnecting-websocket.js' %}"></script>
     <script>
         //roomName берем сейчас как queryparams в строке
-        var username = {{ username }};
+        // var username = {{ username }};
         var roomName = {{ chat_id }};
         var user_id = {{ user_id }}
         // var chat_name = {{ chat }} добавил тут
         // const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
-        const chatSocket = new ReconnectingWebSocket(//Соединение к веб сокетам в конце вставляет roomname
+        const chatSocket = new ReconnectingWebSocket(
             'ws://'
-            + window.location.host
+            + window.location.host//здесь имя сервака?
             + '/ws/chat/'
-            + roomName
+            + roomName//Вот здесь будет чат айди
             + '/'
         );
+
         chatSocket.onopen = function(e) {
             fetchMessages();
         }
         console.log('chat id:',roomName)
-        console.log('Имя чувака:',username)
+        // console.log('Имя чувака:',username)
         console.log('user_id:', user_id)
 
         chatSocket.onmessage = function(e) {
@@ -71,8 +72,8 @@
             chatSocket.send(JSON.stringify({//Щас надо оставить одну и чекнуть response
                 'message': message,
                 'command':'new_message',
-                'from': username,
-                // 'chat': chat_name
+                // 'from': username,
+                'chat_id': roomName
             }));
             messageInputDom.value = '';//Когда сообщение передано, обнуляет InputDOM(сбрасывает в чистое поле)
         };
@@ -93,7 +94,7 @@
       // var imgTag = document.createElement('img');
       // var pTag = document.createElement('p');
       // pTag.textContent = data.content;
-      document.querySelector('#chat-log').value += (data.author+':'+'\t'+data.content +
+      document.querySelector('#chat-log').value += (data.chat+':'+'\t'+data.content +
           '\t'+data.timestamp+'\n');
       // document.querySelector('#chat-log').appendChild(pTag);
     }

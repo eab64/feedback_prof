@@ -8,17 +8,17 @@ class Chats(models.Model):
 
 
 class Message(models.Model):
-    author = models.ForeignKey(User, related_name='author_messages', on_delete=models.CASCADE)
+    # author = models.ForeignKey(User, related_name='author_messages', on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    # chat = models.ForeignKey(Chats, related_name='chat', on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chats, related_name='chat', on_delete=models.CASCADE)
     # is_read = models.BooleanField()
     def __str__(self):
-        return self.author.username
+        return self.content
 
-    def last_10_messages():
-        return Message.objects.order_by('timestamp').all()[:]
-        # return Message.objects.filter(chat=chat_id).order_by('timestamp').all()
+    def last_10_messages(chat_id):
+        # return Message.objects.order_by('timestamp').all()[:]
+        return Message.objects.filter(chat=chat_id).order_by('timestamp').all()
 
 
 class ChatUser(models.Model):

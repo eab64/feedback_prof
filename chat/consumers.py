@@ -4,33 +4,37 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from .models import Message, Chats, ChatUser
 from django.contrib.auth import get_user_model
+from .serializers import ChatsSerializer
 
-User = get_user_model()
+# User = get_user_model()
 
 class ChatConsumer(WebsocketConsumer):
 
     def fetch_messages(self, data):#Берет последний 10 сообщений и пересылает по сути в тот же чат
         print('fetch function started')
         print(data)
-        # chat_id = data['chat_id']
-        messages = Message.last_10_messages()
+        chat_id = data['chat_id']
+        messages = Message.last_10_messages(chat_id)
         content = {
-            'command':'messages',
+            'command': 'messages',
             'messages': self.messages_to_json(messages)
         }
         self.send_message(content)
         print('fetch function end')
 
     def new_message(self, data):#Откуда идет дата, с JS?
+        print('NEW MESSAGE FUNCTION STARTED')
         print(data)
-        print(data)
-        author = data["from"]#Это он берет User_id
-        author_user = User.objects.filter(username=author)[0]#По user_id находит автора
-        # chat_id = data['chat']
+        print('ПОЛУЧАЕМ ДЛЯ consumers:',data['chat_id'])
+        # author = data["from"]#Это он берет User_id
+        # author_user = User.objects.filter(username=author)[0]#По user_id находит автора
+        chat_id = data['chat_id']
+        # chats_id = Chats.objects.filter(id=chat_id)
+        print(type(chat_id))
         message = Message.objects.create(
-            author = author_user,
+            # author = author_user,
             content = data['message'],
-            # chat = chat_id#При созданий сообщения, на верху создался чат
+            chat_id = chat_id#При созданий сообщения, на верху создался чат
             )
         content = {
             'command': 'new_message',
@@ -74,7 +78,7 @@ class ChatConsumer(WebsocketConsumer):
 
     def send_message(self, message):
         print('333333333333333333333333333333333333333333333333')
-        print(message)
+        print('messages!!!!!!',message)
         self.send(text_data=json.dumps(message))
 
     def chat_message(self, event):
@@ -95,12 +99,14 @@ class ChatConsumer(WebsocketConsumer):
 
     def message_to_json(self, message):
         print('------------------MESSAGE TO JSON-------------------')
+        print(message.timestamp)
         return {
-        'author': message.author.username,
+        # 'author': message.author.username,
         'content': message.content,
         'timestamp': str(message.timestamp),
-        # 'chat': message.chat
+        'chat': message.chat_id
         }
+        print('MESSAGES CHANGED CORRECTLY')
     commands = {
         'fetch_messages': fetch_messages,
         'new_message': new_message
