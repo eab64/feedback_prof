@@ -22,6 +22,7 @@ router = routers.DefaultRouter()
 
 chats = router.register('chats', views.ChatsView)
 users = router.register('users', views.UserView)
+# messages = router.register('last/messages', views.LastMessagesView)
 
 
 urlpatterns = [

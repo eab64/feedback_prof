@@ -1,11 +1,12 @@
-from .models import ChatUser, Chats
+from .models import ChatUser, Chats, Message
 
 from rest_framework import serializers
 
 class MessageSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    content = serializers.CharField(max_length=200)
-    created = serializers.DateTimeField()
+    content = serializers.CharField()
+    timestamp = serializers.DateTimeField()
+    chat = serializers.CharField()
+
 
 
 class ChatsSerializer(serializers.HyperlinkedModelSerializer):

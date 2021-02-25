@@ -12,7 +12,6 @@ class ChatConsumer(WebsocketConsumer):
 
     def fetch_messages(self, data):#Берет последний 10 сообщений и пересылает по сути в тот же чат
         print('fetch function started')
-        print(data)
         chat_id = data['chat_id']
         messages = Message.last_10_messages(chat_id)
         content = {
@@ -24,13 +23,11 @@ class ChatConsumer(WebsocketConsumer):
 
     def new_message(self, data):#Откуда идет дата, с JS?
         print('NEW MESSAGE FUNCTION STARTED')
-        print(data)
         print('ПОЛУЧАЕМ ДЛЯ consumers:',data['chat_id'])
         # author = data["from"]#Это он берет User_id
         # author_user = User.objects.filter(username=author)[0]#По user_id находит автора
         chat_id = data['chat_id']
         # chats_id = Chats.objects.filter(id=chat_id)
-        print(type(chat_id))
         message = Message.objects.create(
             # author = author_user,
             content = data['message'],
@@ -78,28 +75,26 @@ class ChatConsumer(WebsocketConsumer):
 
     def send_message(self, message):
         print('333333333333333333333333333333333333333333333333')
-        print('messages!!!!!!',message)
         self.send(text_data=json.dumps(message))
 
     def chat_message(self, event):
         print(type(event))#{'type': 'chat_message', 'message': {'command': 'new_message', 'message': {'author': 'yeldos', 'content': 'testtt', 'timestamp': '2021-01-28 05:38:37.603678+00:00'}}}
         message = event['message']
         a = json.dumps(message)
-        print(message)
         self.send(text_data=json.dumps(event['message']))
         print('444444444444444444444444444444444444444444444444')
 
 
     def messages_to_json(self, messages):#
         print('555555555555555555555555555555555555555555555555555')
+        print('------------------MESSAGEs TO JSON-------------------')
         result = []
         for message in messages:
             result.append(self.message_to_json(message))
         return result
 
     def message_to_json(self, message):
-        print('------------------MESSAGE TO JSON-------------------')
-        print(message.timestamp)
+
         return {
         # 'author': message.author.username,
         'content': message.content,
