@@ -12,7 +12,7 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     chat = models.ForeignKey(Chats, related_name='chat', on_delete=models.CASCADE)
-    # is_read = models.BooleanField()
+    is_read = models.BooleanField(default=False)
     def __str__(self):
         return self.content
 

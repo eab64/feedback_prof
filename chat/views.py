@@ -2,6 +2,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.db.models import Max
+from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, serializers
@@ -10,10 +11,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+from rest_framework.settings import api_settings
+from rest_framework import viewsets, status
+
+
 import json
 import datetime
 from .models import Chats, ChatUser, Message
-from .serializers import ChatsSerializer, UserSerializer, MessageSerializer
+from .serializers import ChatsSerializer, UserSerializer, MessageSerializer, MFSerializer, ChatUserSerializer
 from django.core.paginator import Paginator
 import requests
 
@@ -47,46 +52,75 @@ def sign_in(request):
     return render(request, 'chat/button.html')
 
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-def last_messages(request):
-    user_list = Message.objects.all()
-    # a = list(x)
-    # for i in a:
-    #     user_list.append(Message.objects.filter(chat_id=i).latest('timestamp'))
-    page = request.GET.get('page', 1)
-    paginator = Paginator(user_list, 10)
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def paginated_messages(request):
+    Message.objects.filter(chat_id=request.query_params.get('chat_id')).update(is_read=True)
     try:
-        users = paginator.page(page)
-    except PageNotAnInteger:
-        users = paginator.page(1)
-    except EmptyPage:
-        users = paginator.page(paginator.num_pages)
+        pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+        paginator = pagination_class()
+        messages = Message.objects.filter(chat_id=request.query_params.get('chat_id')).order_by('-id').all()
 
-    return render(request, 'chat/admin.html', { 'users': users })
+        page = paginator.paginate_queryset(messages, request)
+        serializer = MFSerializer(page, many=True)
+        for n_message in serializer.data:
+            n_message['timestamp'] = n_message['timestamp'].replace("T", " ").replace("Z", "")
 
-class MessagesView(APIView):
-    """Last messages by pagination"""
-    def get(self, request):
-        messages_list = []
-        last_mess_indexes = Message.objects.all().values_list('chat_id', flat=True).distinct()
-        indexes = list(last_mess_indexes)
-        for i in indexes:
-            messages_list.append(Message.objects.filter(chat_id=i).latest('timestamp'))
+        result = paginator.get_paginated_response(reversed(serializer.data))
+        (result.data).update({'user': 'Yeldos'})
 
-        paginator = Paginator(messages_list, 10)
-        page = request.GET.get('page')
-        try:
-            messages_list = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            messages_list = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
-            messages_list = paginator.page(paginator.num_pages)
-        serializer = MessageSerializer(messages_list, many=True)
-        return Response({'messages': serializer.data})
+    except ChatUser.DoesNotExist:
+        result = Response(status=status.HTTP_400_BAD_REQUEST)
 
+    return result
+
+
+@api_view(['GET'])
+def last_messages(request):
+    get_data = request.query_params
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+    paginator = pagination_class()
+
+    if 'sortBy' in get_data:
+        sortBy = get_data['sortBy']
+    else:
+        sortBy = '-timestamp'
+
+    if 'user_id' in get_data:
+
+        chatUser = ChatUser.objects.filter(user_id=get_data['user_id']).first()
+        serializer = ChatUserSerializer(chatUser)
+        user = serializer.data
+        chat_id = user['chatik_id']
+
+        chat = Q(chat_id=chat_id)
+    else:
+
+        chat = Q(chat_id__isnull=False)
+
+    if 'is_read' in get_data:
+
+        is_read = Q(is_read=get_data['is_read'])
+    else:
+
+        is_read = Q(is_read__isnull=False)
+
+
+    queryset = Message.objects.values('chat_id').annotate(pk=Max('id')).all()
+
+    messageIds = list()
+
+    for n in queryset:
+        messageIds.append(n['pk'])
+    messages = Message.objects.filter(pk__in=messageIds).filter(is_read ,chat).order_by(
+        sortBy)
+
+    page = paginator.paginate_queryset(messages, request)
+    serializer = MFSerializer(page, many=True)
+
+    result = paginator.get_paginated_response(serializer.data)
+
+    return result
 
 
 class ChatsView(viewsets.ModelViewSet):

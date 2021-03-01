@@ -21,3 +21,18 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ChatUser
         fields = ('id', 'user_id', 'chatik')
+
+
+class MFSerializer(serializers.ModelSerializer):
+    class Meta:
+        # fields = '__all__'
+        fields = ('id', 'timestamp','chat_id', 'content', 'is_read')
+        model = Message
+
+
+
+
+class ChatUserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ChatUser
+        fields = ('id', 'user_id', 'chatik_id')
