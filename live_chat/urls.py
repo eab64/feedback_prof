@@ -26,7 +26,7 @@ users = router.register('users', views.UserView)
 
 
 urlpatterns = [
-    path('', include(router.urls)),  # API chats and users
+    path('chat/', include(router.urls)),  # API chats and users
     path('admin/', admin.site.urls),
-    path('chat/', include('chat.urls')),
+    path('', include('chat.urls')),
 ]

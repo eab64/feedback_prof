@@ -47,37 +47,6 @@ def main(request, user_id):
             'user_id': mark_safe(json.dumps(user_id))
         })
 
-@api_view(['GET'])
-def index(request, user_id):#Что передается в room.html всегда?
-    try:
-        chatUser = ChatUser.objects.get(user_id=user_id)
-        render(request, 'chat/room.html', {
-            'room_name_json': mark_safe(json.dumps('SmartPlaza Chat')),
-            'username': mark_safe(json.dumps(user_id)),
-            'chat_id': mark_safe(json.dumps(chatUser.chatik.id))})
-        result = chatUser.chatik.id
-
-    except ChatUser.DoesNotExist:
-        new_chat = Chats.objects.create(name='SmartPlaza Chat')
-        chat_id = new_chat.id
-        ChatUser.objects.create(chatik=new_chat, user_id=user_id)
-        ChatUser.objects.create(chatik=new_chat, user_id=1)
-        ChatUser.objects.create(chatik=new_chat, user_id=12)
-        Message.objects.create(content='Здравствуйте вас привествует SmartPlaza! Чем можем вам помочь?',
-                               chat_id=chat_id,
-                               author=12, timestamp=datetime.now(), is_solved=True)
-        render(request, 'chat/room.html', {
-            'room_name_json': mark_safe(json.dumps(new_chat.name)),
-            'username': mark_safe(json.dumps(user_id)),
-            'chat_id': mark_safe(json.dumps(chat_id))
-        })
-        result = chat_id
-
-    return Response({
-        'chat_id': result,
-
-    })
-
 
 @api_view(['GET'])
 def enter_chat(request):
@@ -98,10 +67,6 @@ def enter_chat(request):
     return Response({
         'chat_id': result,
     })
-
-def sign_in(request):
-    user_id= request.query_params.get('user_id')
-    return render(request, 'chat/button.html')
 
 
 @api_view(['GET'])
@@ -183,7 +148,6 @@ class ChatsView(viewsets.ModelViewSet):
 class UserView(viewsets.ModelViewSet):
     queryset = ChatUser.objects.all()
     serializer_class = UserSerializer
-
 
 
 
